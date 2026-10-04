@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+     <script src="../js/jquery-2.1.1.min.js"></script> 
+
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+   <style> .popover {
+	max-width: 800px;
+	width: auto;
+}</style>
+</head>
+<body>
+
+
+
+
+<div class="container-fluid">
+  <h3>DCEC* <small>incremental parser</small></h3>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2">
+      <div class="input-group input-group-lg">
+  <span class="input-group-addon">&#8866</span>
+  <input id="input"  onchange="handleSuggest()" speech="speech"  x-webkit-speech x-webkit-speech="x-webkit-speech" type="text" class="form-control" placeholder="text">
+</div>
+    </div>
+  </div>
+ <div class="row">
+    <div class="col-md-2 col-md-offset-4">
+        <h5>out <small>completions & parse trees</small></h5>
+
+  </div>
+ <div class="col-md-8 col-md-offset-2">
+
+       <div   class="well well-lg "id="display">
+       </div>
+   </div>
+   </div>    
+</div>
+
+<div tabindex="-1" class="modal fade" id="myModal" role="dialog">
+  <div class="modal-dialog modal-lg">
+  <div class="modal-content">
+	<div class="modal-header">
+		<button class="close" type="button" data-dismiss="modal">×</button>
+		<h5 class="modal-title">Abstract Tree<small> [GF]</small></h5>
+	</div>
+	<div class="modal-body">
+		
+	</div>
+	<div class="modal-footer">
+		<button class="btn btn-default" data-dismiss="modal">Close</button>
+	</div>
+   </div>
+  </div>
+</div>
+<div class="navbar navbar-fixed-bottom "><div  id="alertBar" class="alert alert-info alert-dismissable">
+  <button type="button" class="close"data-dismiss="alert" aria-hidden="true">&times;</button>
+   <small class="text-center">Type in sentences and check for completions
+	and parses. Contact: naveensundarg@gmail.com
+</small> 
+</div>
+</div>
+
+
+
+<script>
+$("#alertBar").hide(0);
+$('.results').tooltip()
+function attachPopover ()
+{
+  $('.results').popover(
+  {
+     trigger: 'hover',
+     html: true,
+     placement: 'top',
+         container: 'body',
+
+  });
+};
+
+
+function init(){
+  $(".thumbnail").on("click",showTree);
+  attachPopover();
+}
+function showTree(){
+         
+  	$('.modal-body').empty();
+   	var title = $(this).parent('a').attr("title");
+  	$('.modal-title').html(title);
+  	$($(this).html()).appendTo('.modal-body');
+  	$('#myModal').modal({show:true});
+      console.log("modal clicked");
+
+}
+
+function suggest(){
+   var url = "/query?q="+$("#input").val();
+
+   $.get(url, function(data) {
+   console.log( data);
+   $('#display').html(data);
+   init();
+   
+   $('#display').slideDown();});
+}
+var cached = "";
+function handleSuggest (e){
+
+    var code = (e.keyCode || e.which);
+
+    // do nothing if it's an arrow key
+    if(code == 37 || code == 38 || code == 39 || code == 40) {
+        return;
+    }
+
+   console.log( "Handler for .keypress() called." );
+   if($("#input").val()==cached) {return;}
+    $('[data-toggle="popover"]').popover('hide');
+
+   suggest();
+   cached= $("#input").val();
+  
+}
+
+function autoSuggest (){
+
+   console.log( "Handler for .keypress() called." );
+   if($("#input").val()==cached) {return;}
+    $('[data-toggle="popover"]').popover('hide');
+
+   suggest();
+   cached= $("#input").val();
+  
+}
+
+setInterval("autoSuggest()", 500);
+
+$("#input").keyup(handleSuggest);
+$("#alertBar").slideDown();
+
+suggest();
+
+  var recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onstart = function() {
+    recognizing = true;
+    showInfo('info_speak_now');
+    start_img.src = '/intl/en/chrome/assets/common/images/content/mic-animate.gif';
+  };
+
+  recognition.onerror = function(event) {
+    if (event.error == 'no-speech') {
+      start_img.src = '/intl/en/chrome/assets/common/images/content/mic.gif';
+      showInfo('info_no_speech');
+      ignore_onend = true;
+    }
+    if (event.error == 'audio-capture') {
+      start_img.src = '/intl/en/chrome/assets/common/images/content/mic.gif';
+      showInfo('info_no_microphone');
+      ignore_onend = true;
+    }
+    if (event.error == 'not-allowed') {
+      if (event.timeStamp - start_timestamp < 100) {
+        showInfo('info_blocked');
+      } else {
+        showInfo('info_denied');
+      }
+      ignore_onend = true;
+    }
+  };
+
+
+
+</script>
+
+</body>
+</html>
